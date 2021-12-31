@@ -3,7 +3,13 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS ] });
 
 require('dotenv').config();
 const { readdirSync } = require('fs');
-const { BotToken } = require('./config.json');
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
+
+const { CLIENT_ID, GUILD_ID, BotToken } = require('../config.json');
+const commands = require('./interactionCommands.js');
+
+const DiscordBotToken = process.env.DISCORD_BOT_TOKEN || BotToken; // It first attempts to get the bot token from a .env or enviromental variables (as you should probably put them in there), if not it will then try to find the bot token in ./config.json which is admittedly much less secure
 
 const commandFiles = readdirSync('./commands').filter(file => file.endsWith('.js')); // Creates a filter where it only acknowledges files that end with ".js"
 client.commands = new Collection(); // Creates a collection containing all of the commands in ./commands/
@@ -12,8 +18,26 @@ for (const file of commandFiles) { // Loops through all of the commands inside o
 	client.commands.set(command.data.name, command);
 }
 
-client.once('ready', () => {
-    console.log(`${client.user.id} is now ready`);
+client.once('ready', async () => {
+    console.log(`${client.user.tag} is now ready`);
+
+    const rest = new REST({
+        version: '9',
+    }).setToken(DiscordBotToken);
+
+    try {
+        console.log('Started refreshing application (/) commands.');
+
+        await rest.put(
+            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+            { body: commands },
+        );
+
+        console.log('Successfully reloaded application (/) commands.');
+    }
+    catch (error) {
+        console.error(error);
+    }
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -32,5 +56,4 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
-const DiscordBotToken = process.env.DISCORD_BOT_TOKEN || BotToken; // It first attempts to get the bot token from a .env or enviromental variables (as you should probably put them in there), if not it will then try to find the bot token in ./config.json which is admittedly much less secure
 client.login(DiscordBotToken);
