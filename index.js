@@ -6,7 +6,7 @@ const { readdirSync } = require('fs');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 
-const { CLIENT_ID, GUILD_ID, BotToken } = require('../config.json');
+const { ClientID, GuildID, BotToken } = require('./config.json');
 const commands = require('./interactionCommands.js');
 
 const DiscordBotToken = process.env.DISCORD_BOT_TOKEN || BotToken; // It first attempts to get the bot token from a .env or enviromental variables (as you should probably put them in there), if not it will then try to find the bot token in ./config.json which is admittedly much less secure
@@ -29,7 +29,7 @@ client.once('ready', async () => {
         console.log('Started refreshing application (/) commands.');
 
         await rest.put(
-            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+            Routes.applicationGuildCommands(ClientID, GuildID),
             { body: commands },
         );
 
